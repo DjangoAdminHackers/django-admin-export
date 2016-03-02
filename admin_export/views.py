@@ -5,6 +5,7 @@ from django.http.response import HttpResponse
 from django.template import loader, Context
 from django.views.generic import TemplateView
 import csv
+from admin_export.signals import pre_export
 from report_utils.mixins import GetFieldsMixin, DataExportMixin
 from report_utils.model_introspection import get_relation_fields_from_model
 
@@ -91,6 +92,7 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
             self.request.user,
         )
         format = request.POST.get("__format")
+        pre_export.send(sender=self.get_model_class(), queryset=self.get_queryset(self.get_model_class()))
         if format == "html":
             return self.list_to_html_response(data_list, header=fields)
         elif format == "csv":
