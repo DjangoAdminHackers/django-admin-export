@@ -82,7 +82,11 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
         return context
 
     def post(self, request, **kwargs):
-        
+        pre_export.send(
+            sender=get_model_class(),
+            request=request,
+            **kwargs,
+        )        
         context = self.get_context_data(**kwargs)
         fields = []
         for field_name, value in request.POST.items():
@@ -94,10 +98,6 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
             self.request.user,
         )
         format = request.POST.get("__format")
-        pre_export.send(
-            sender=context['model_class'],
-            **context,
-        )
         if format == "html":
             response = self.list_to_html_response(data_list, header=fields)
         elif format == "csv":
