@@ -74,7 +74,7 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
         path = self.request.GET.get('path', '')
         path_verbose = self.request.GET.get('path_verbose', '')
         context['opts'] = model_class._meta
-        context['model_class']
+        context['model_class'] = model_class
         context['queryset'] = queryset
         context['model_ct'] = self.request.GET['ct']
         context['related_fields'] = get_relation_fields_from_model(model_class)
