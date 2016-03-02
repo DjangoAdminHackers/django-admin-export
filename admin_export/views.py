@@ -74,6 +74,7 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
         path = self.request.GET.get('path', '')
         path_verbose = self.request.GET.get('path_verbose', '')
         context['opts'] = model_class._meta
+        context['model_class']
         context['queryset'] = queryset
         context['model_ct'] = self.request.GET['ct']
         context['related_fields'] = get_relation_fields_from_model(model_class)
@@ -81,6 +82,7 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
         return context
 
     def post(self, request, **kwargs):
+        
         context = self.get_context_data(**kwargs)
         fields = []
         for field_name, value in request.POST.items():
@@ -92,13 +94,23 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
             self.request.user,
         )
         format = request.POST.get("__format")
-        pre_export.send(sender=self.get_model_class(), queryset=self.get_queryset(self.get_model_class()))
+        pre_export.send(
+            sender=context['model_class'],
+            **context,
+        )
         if format == "html":
-            return self.list_to_html_response(data_list, header=fields)
+            response = self.list_to_html_response(data_list, header=fields)
         elif format == "csv":
-            return self.list_to_csv_response(data_list, header=fields)
+            response = self.list_to_csv_response(data_list, header=fields)
         else:
-            return self.list_to_xlsx_response(data_list, header=fields)
+            response = self.list_to_xlsx_response(data_list, header=fields)
+            
+        post_export.send(
+            sender=context['model_class'],
+            **context,
+        )
+        
+        return response
 
     def get(self, request, *args, **kwargs):
         if request.REQUEST.get("related"):  # Dispatch to the other view
