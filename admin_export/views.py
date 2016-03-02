@@ -83,10 +83,10 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
 
     def post(self, request, **kwargs):
         pre_export.send(
-            sender=get_model_class(),
+            sender=self.get_model_class(),
             request=request,
-            **kwargs,
-        )        
+            **kwargs
+        )
         context = self.get_context_data(**kwargs)
         fields = []
         for field_name, value in request.POST.items():
@@ -107,7 +107,7 @@ class AdminExport(GetFieldsMixin, ExtDataExportMixin, TemplateView):
             
         post_export.send(
             sender=context['model_class'],
-            **context,
+            **context
         )
         
         return response
